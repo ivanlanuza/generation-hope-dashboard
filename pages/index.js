@@ -19,6 +19,7 @@ import useDonorState from "@/hooks/useDonorState";
 import { normalize } from "@/lib/normalize";
 import { formatMoney2 } from "@/lib/formatters";
 import { Card as UICard } from "@/components/ui/card";
+import Link from "next/link";
 
 const MapNoSSR = dynamic(() => import("@/components/map/LeafletMap"), {
   ssr: false,
@@ -117,12 +118,14 @@ export default function Home() {
       >
         <div className="mx-auto max-w-7xl px-2">
           <div className="h-16 flex items-center py-2">
-            <Image
-              src="/images/hope-logo.png"
-              alt="Generation Hope"
-              width={120}
-              height={8}
-            />
+            <Link href="https://www.generationhope.ph/">
+              <Image
+                src="/images/hope-logo.png"
+                alt="Generation Hope"
+                width={120}
+                height={8}
+              />
+            </Link>
           </div>
         </div>
       </header>
@@ -177,8 +180,8 @@ export default function Home() {
             onChange={setActiveTab}
             tabs={[
               { id: "yearly", label: "Yearly Impact" },
-              { id: "schools", label: "School List" },
               { id: "schoolmap", label: "School Map" },
+              { id: "schools", label: "School List" },
               { id: "donors", label: "Donor List" },
               { id: "construction", label: "Construction Data" },
             ]}
