@@ -26,11 +26,11 @@ export default function DataTable({ data, columns, pageSize = 5, filter, onFilte
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <Input placeholder="Search…" value={filter} onChange={(e) => onFilter?.(e.target.value)} className="max-w-xs" />
       </div>
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-[700px] md:min-w-0">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -38,7 +38,7 @@ export default function DataTable({ data, columns, pageSize = 5, filter, onFilte
                   <TableHead
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className="cursor-pointer select-none"
+                    className={`cursor-pointer select-none whitespace-nowrap ${header.column.columnDef.meta?.className || ""}`}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {({ asc: " \u2191", desc: " \u2193" }[header.column.getIsSorted()] || null)}
@@ -51,7 +51,7 @@ export default function DataTable({ data, columns, pageSize = 5, filter, onFilte
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className={cell.column.columnDef.meta?.className || ""}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -67,11 +67,11 @@ export default function DataTable({ data, columns, pageSize = 5, filter, onFilte
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-3">
         <div className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end sm:justify-normal">
           <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
             Previous
           </Button>
