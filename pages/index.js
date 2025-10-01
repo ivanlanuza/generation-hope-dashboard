@@ -1,115 +1,208 @@
+"use client";
 import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import dynamic from "next/dynamic";
+import { useState, useMemo, useCallback } from "react";
+import { Card } from "@/components/ui/card";
+import { School, Building2, Users, HandCoins } from "lucide-react";
+import StatsCard from "@/components/cards/StatsCard";
+import YearlyClassroomsChart from "@/components/charts/YearlyClassroomsChart";
+import YearlyStudentsChart from "@/components/charts/YearlyStudentsChart";
+import TabBar from "@/components/tabs/TabBar";
+import SchoolTable from "@/components/tables/SchoolTable";
+import DonorTable from "@/components/tables/DonorTable";
+import BuildsTable from "@/components/tables/BuildsTable";
+import DonorDetailSheet from "@/components/detail-sheets/DonorDetailSheet";
+import SchoolDetailSheet from "@/components/detail-sheets/SchoolDetailSheet";
+import useDashboardData from "@/hooks/useDashboardData";
+import useMapState from "@/hooks/useMapState";
+import useDonorState from "@/hooks/useDonorState";
+import { normalize } from "@/lib/normalize";
+import { formatMoney2 } from "@/lib/formatters";
+import { Card as UICard } from "@/components/ui/card";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const MapNoSSR = dynamic(() => import("@/components/map/LeafletMap"), { ssr: false });
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("yearly");
+  const [schoolFilter, setSchoolFilter] = useState("");
+  const [buildsFilter, setBuildsFilter] = useState("");
+
+  const {
+    error,
+    donors, donorRows, donationsByDonor,
+    schoolsRows, buildsRows,
+    buildsBySchoolMap, classroomsBySchoolMap, impactsBySchoolMap,
+    yearlyImpactData, yearlyStudentsData,
+    totals,
+  } = useDashboardData();
+
+  const {
+    mapCenter, setMapCenter, mapZoom, setMapZoom,
+    selectedSchool, isSchoolSheetOpen, openSchoolSheet, closeSchoolSheet,
+  } = useMapState();
+
+  const {
+    donorFilter, setDonorFilter,
+    selectedDonor, openDonorSheet, closeDonorSheet, isDonorSheetOpen,
+    selectedDonorDonations,
+  } = useDonorState(donationsByDonor);
+
+  const nf = new Intl.NumberFormat("en-US");
+
+  const handleMapClickFromTable = useCallback((school) => {
+    const lat = Number(school.latitude);
+    const lng = Number(school.longitude);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      setMapCenter([lat, lng]);
+      setMapZoom(13);
+      setActiveTab("schoolmap");
+      openSchoolSheet(school);
+    } else {
+      openSchoolSheet(school);
+    }
+  }, [openSchoolSheet, setActiveTab, setMapCenter, setMapZoom]);
+
+  const schoolPoints = useMemo(() => {
+    return (schoolsRows || [])
+      .map((r) => ({ name: r.schoolName, lat: Number(r.latitude), lng: Number(r.longitude) }))
+      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  }, [schoolsRows]);
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 shadow-sm" style={{ backgroundColor: "#1e7dbf" }}>
+        <div className="mx-auto max-w-7xl px-2">
+          <div className="h-16 flex items-center py-2">
+            <Image src="/images/hope-logo.png" alt="Generation Hope" width={120} height={8} />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </header>
+
+      <div className="pt-24 mx-4 lg:mx-24 grid gap-6">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold mt-4">Impact Dashboard: Generation Hope</h1>
+          <p className="text-muted-foreground mt-1">Tracking our impact to schools and students</p>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard icon={School} label="Classrooms Built" value={error ? "—" : nf.format(totals.classroomCount || 0)} />
+          <StatsCard icon={Building2} label="Schools Helped" value={error ? "—" : nf.format(totals.schoolsCount || 0)} />
+          <StatsCard icon={Users} label="Students Impacted" value={error ? "—" : nf.format(totals.studentsImpacted || 0)} />
+          <StatsCard icon={HandCoins} label="Construction Cost Donated" value={error ? "—" : (<span>{formatMoney2((totals.totalConstructionCost || 0)/1_000_000)}<span className="text-base align-top">&nbsp;M</span></span>)} />
+        </div>
+
+        <div className="mt-8">
+          <TabBar
+            active={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              { id: "yearly", label: "Yearly Impact" },
+              { id: "schools", label: "School List" },
+              { id: "schoolmap", label: "School Map" },
+              { id: "donors", label: "Donor List" },
+              { id: "construction", label: "Construction Data" },
+            ]}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+          <UICard className="p-6 mt-4 border-0">
+            {activeTab === "yearly" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Classrooms Built per Year</h3>
+                  <YearlyClassroomsChart data={yearlyImpactData} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Students Impacted per Year</h3>
+                  <YearlyStudentsChart data={yearlyStudentsData} />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Note: The 2021 value represents a cumulative count for 2013–2021.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "schools" && (
+              <>
+                <SchoolTable
+                  data={schoolsRows}
+                  filter={schoolFilter}
+                  onFilter={setSchoolFilter}
+                  onMap={handleMapClickFromTable}
+                  onOpenSheet={(s) => openSchoolSheet(s)}
+                />
+                <SchoolDetailSheet
+                  open={isSchoolSheetOpen}
+                  onOpenChange={(v) => (v ? null : closeSchoolSheet())}
+                  school={selectedSchool}
+                  buildsMap={buildsBySchoolMap}
+                  impactsMap={impactsBySchoolMap}
+                  classroomsMap={classroomsBySchoolMap}
+                />
+              </>
+            )}
+
+            {activeTab === "schoolmap" && (
+              <div>
+                <div className="rounded-md overflow-hidden border -mx-6 -mt-6 -mb-6 relative z-0">
+                  <MapNoSSR
+                    center={mapCenter}
+                    zoom={mapZoom}
+                    points={schoolPoints}
+                    onMarkerClick={(p) => {
+                      const norm = (v) => String(v || "").trim().toLowerCase();
+                      let match = (schoolsRows || []).find((s) => norm(s.schoolName) === norm(p.name));
+                      if (!match) {
+                        match = (schoolsRows || []).find(
+                          (s) => Number(s.latitude) === Number(p.lat) && Number(s.longitude) === Number(p.lng)
+                        );
+                      }
+                      if (match) {
+                        openSchoolSheet(match);
+                      } else {
+                        openSchoolSheet({ schoolName: p.name, latitude: p.lat, longitude: p.lng });
+                      }
+                    }}
+                  />
+                </div>
+                <SchoolDetailSheet
+                  open={isSchoolSheetOpen}
+                  onOpenChange={(v) => (v ? null : closeSchoolSheet())}
+                  school={selectedSchool}
+                  buildsMap={buildsBySchoolMap}
+                  impactsMap={impactsBySchoolMap}
+                  classroomsMap={classroomsBySchoolMap}
+                />
+              </div>
+            )}
+
+            {activeTab === "donors" && (
+              <>
+                <DonorTable
+                  data={donorRows}
+                  filter={donorFilter}
+                  onFilter={setDonorFilter}
+                  onOpenSheet={(donor) => openDonorSheet(donor)}
+                  donationsByDonor={donationsByDonor}
+                />
+                <DonorDetailSheet
+                  open={isDonorSheetOpen}
+                  onOpenChange={(v) => (v ? null : closeDonorSheet())}
+                  donor={selectedDonor}
+                  donations={selectedDonorDonations}
+                />
+              </>
+            )}
+
+            {activeTab === "construction" && (
+              <BuildsTable
+                data={buildsRows}
+                filter={buildsFilter}
+                onFilter={setBuildsFilter}
+              />
+            )}
+          </UICard>
+        </div>
+      </div>
+    </>
   );
 }
