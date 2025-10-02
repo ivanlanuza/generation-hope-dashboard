@@ -7,6 +7,8 @@ import { School, Building2, Users, HandCoins, Loader2 } from "lucide-react";
 import StatsCard from "@/components/cards/StatsCard";
 import YearlyClassroomsChart from "@/components/charts/YearlyClassroomsChart";
 import YearlyStudentsChart from "@/components/charts/YearlyStudentsChart";
+import BuildsTreemap from "@/components/charts/BuildsTreemap";
+import DonationTreemap from "@/components/charts/DonationTreemap";
 import TabBar from "@/components/tabs/TabBar";
 import SchoolTable from "@/components/tables/SchoolTable";
 import DonorTable from "@/components/tables/DonorTable";
@@ -43,6 +45,8 @@ export default function Home() {
     impactsBySchoolMap,
     yearlyImpactData,
     yearlyStudentsData,
+    buildsTreemapData,
+    donationTreemapData,
     totals,
   } = useDashboardData();
 
@@ -189,7 +193,7 @@ export default function Home() {
 
           <UICard className="p-6 mt-4 border-0">
             {activeTab === "yearly" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
                     Classrooms Built per Year
@@ -205,6 +209,19 @@ export default function Home() {
                     Note: The 2021 value represents a cumulative count for
                     2013–2021.
                   </p>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <h3 className="text-lg font-semibold mb-2">
+                    Classrooms Built per Region
+                  </h3>
+                  <BuildsTreemap data={buildsTreemapData} />
+                </div>
+                <div className="lg:col-span-1">
+                  <h3 className="text-lg font-semibold mb-2">
+                    Classrooms Donated per Donor
+                  </h3>
+                  <DonationTreemap data={donationTreemapData} />
                 </div>
               </div>
             )}
@@ -231,7 +248,7 @@ export default function Home() {
 
             {activeTab === "schoolmap" && (
               <div>
-                <div className="rounded-md overflow-hidden border -mx-6 -mt-6 -mb-6 relative z-0">
+                <div className="h-[560px] rounded-md overflow-hidden border -mx-6 -mt-6 -mb-6 relative z-0">
                   <MapNoSSR
                     center={mapCenter}
                     zoom={mapZoom}

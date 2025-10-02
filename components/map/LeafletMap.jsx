@@ -25,7 +25,7 @@ function Recenter({ center, zoom }) {
 
 export default function LeafletMap({ center=[14.5995,120.9842], zoom=6, points=[], onMarkerClick, onMarkerHover }) {
   return (
-    <MapContainer center={center} zoom={zoom} style={{ height: 420, width: '100%' }}>
+    <MapContainer center={center} zoom={zoom} className="w-full h-full">
       <Recenter center={center} zoom={zoom} />
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                  attribution="&copy; OpenStreetMap contributors" />
